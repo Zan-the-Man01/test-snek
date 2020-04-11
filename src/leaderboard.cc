@@ -22,8 +22,9 @@ LeaderBoard::LeaderBoard(const string& db_path) : db_{db_path} {
 }
 
 void LeaderBoard::AddScoreToLeaderBoard(const Player& player) {
-  // TODO(you): Add your query here.
-  db_ << "";
+  db_ << "INSERT INTO leaderboard (name,score) values (?,?);"
+      << player.name
+      << player.score;
 }
 
 vector<Player> GetPlayers(sqlite::database_binder* rows) {
