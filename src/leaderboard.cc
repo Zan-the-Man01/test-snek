@@ -43,14 +43,18 @@ vector<Player> GetPlayers(sqlite::database_binder* rows) {
 
 vector<Player> LeaderBoard::RetrieveHighScores(const size_t limit) {
   // TODO(you): Add your query here.
-  auto rows = db_ << "";
+  auto rows = db_ << "SELECT name,score FROM leaderboard ORDER BY score DESC LIMIT ?;"
+                  << limit;
   return GetPlayers(&rows);
 }
 
 vector<Player> LeaderBoard::RetrieveHighScores(const Player& player,
                                                const size_t limit) {
   // TODO(you): Add your query here.
-  auto rows = db_ << "";
+  //******************************** ACTUALLY GET IT FROM THE RIGHT PLAYER
+  auto rows = db_ << "SELECT name,score FROM leaderboard WHERE name = ? ORDER BY score DESC LIMIT ?;"
+      << player.name
+      << limit;
   return GetPlayers(&rows);
 }
 

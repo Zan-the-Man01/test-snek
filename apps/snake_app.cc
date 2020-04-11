@@ -73,12 +73,14 @@ void SnakeApp::setup() {
 
 void SnakeApp::update() {
   if (state_ == GameState::kGameOver) {
-    if (top_players_.empty()) {
+    if (top_players_.empty() || currents_top_scores_.empty()) {
       leaderboard_.AddScoreToLeaderBoard({player_name_, engine_.GetScore()});
       top_players_ = leaderboard_.RetrieveHighScores(kLimit);
+      currents_top_scores_ = leaderboard_.RetrieveHighScores({player_name_, engine_.GetScore()}, kLimit);
 
       // It is crucial the this vector be populated, given that `kLimit` > 0.
       assert(!top_players_.empty());
+      assert(!currents_top_scores_.empty());
     }
     return;
   }
@@ -170,17 +172,43 @@ void SnakeApp::DrawGameOver() {
   // Lazily print.
   if (printed_game_over_) return;
   if (top_players_.empty()) return;
+  if (currents_top_scores_.empty()) return;
 
   const cinder::vec2 center = getWindowCenter();
   const cinder::ivec2 size = {500, 50};
   const Color color = Color::black();
+  const Color yellow = Color::hex(0xFFFF00);
+  const size_t offset = 200;
+
+
+  PrintText("Game Over :(", color, size, center);
 
   size_t row = 0;
-  PrintText("Game Over :(", color, size, center);
+  PrintText("Overall High Scores", color, size, {center.x - offset, center.y + (++row) * 50});
   for (const snake::Player& player : top_players_) {
     std::stringstream ss;
     ss << player.name << " - " << player.score;
-    PrintText(ss.str(), color, size, {center.x, center.y + (++row) * 50});
+
+    if (player.name == player_name_ && player.score == engine_.GetScore()) {
+      PrintText(ss.str(), yellow, size, {center.x - offset, center.y + (++row) * 50});
+    } else {
+      PrintText(ss.str(), color, size, {center.x - offset, center.y + (++row) * 50});
+    }
+    //PrintText(ss.str(), color, size, {center.x - offset, center.y + (++row) * 50});
+  }
+
+  row = 0;
+  PrintText("Your High Scores", color, size, {center.x + offset, center.y + (++row) * 50});
+  for (const snake::Player& player : currents_top_scores_) {
+    std::stringstream ss;
+    ss << player.name << " - " << player.score;
+
+    if (player.score == engine_.GetScore()) {
+      PrintText(ss.str(), yellow, size, {center.x + offset, center.y + (++row) * 50});
+    } else {
+      PrintText(ss.str(), color, size, {center.x + offset, center.y + (++row) * 50});
+    }
+    //PrintText(ss.str(), color, size, {center.x + offset, center.y + (++row) * 50});
   }
 
   printed_game_over_ = true;
@@ -275,6 +303,7 @@ void SnakeApp::ResetGame() {
   state_ = GameState::kPlaying;
   time_left_ = 0;
   top_players_.clear();
+  currents_top_scores_.clear();
 }
 
 }  // namespace snakeapp
