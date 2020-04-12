@@ -153,6 +153,7 @@ void SnakeApp::draw() {
   DrawBackground();
   DrawSnake();
   DrawFood();
+  DrawPortals();
   if (state_ == GameState::kCountDown) DrawCountDown();
 }
 
@@ -279,6 +280,21 @@ void SnakeApp::DrawFood() {
   cinder::gl::color(red_val_, green_val_, blue_val_);
 
   const Location loc = engine_.GetFood().GetLocation();
+  cinder::gl::drawSolidRect(Rectf(tile_size_ * loc.Row(),
+                                  tile_size_ * loc.Col(),
+                                  tile_size_ * loc.Row() + tile_size_,
+                                  tile_size_ * loc.Col() + tile_size_));
+}
+
+void SnakeApp::DrawPortals() const {
+  cinder::gl::color(1, 1, 1);
+  Location loc = Location(3, 3);
+  cinder::gl::drawSolidRect(Rectf(tile_size_ * loc.Row(),
+                                  tile_size_ * loc.Col(),
+                                  tile_size_ * loc.Row() + tile_size_,
+                                  tile_size_ * loc.Col() + tile_size_));
+
+  loc = Location(12, 12);
   cinder::gl::drawSolidRect(Rectf(tile_size_ * loc.Row(),
                                   tile_size_ * loc.Col(),
                                   tile_size_ * loc.Row() + tile_size_,

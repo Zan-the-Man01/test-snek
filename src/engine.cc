@@ -68,6 +68,12 @@ void Engine::Step() {
   Location new_head_loc =
       (snake_.Head().GetLocation() + d_loc) % Location(height_, width_);
 
+  if (snake_.Head().GetLocation() + d_loc == Location(3, 3)) {
+    new_head_loc = Location(12, 12);
+  } else if (snake_.Head().GetLocation() + d_loc == Location(12, 12)) {
+    new_head_loc = Location(3, 3);
+  }
+
   const std::set<Location> old_occupied_tiles = GetOccupiedTiles();
 
   // Did a collision occur?
