@@ -54,6 +54,7 @@ Engine::Engine(size_t width, size_t height, unsigned seed)
       last_direction_{Direction::kUp},
       rng_{seed},
       uniform_{0, 1} {
+
   Reset();
 }
 

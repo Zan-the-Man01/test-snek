@@ -5,6 +5,7 @@
 
 #include <cinder/app/App.h>
 #include <cinder/gl/gl.h>
+#include <cinder/audio/audio.h>
 #include <snake/engine.h>
 #include <snake/leaderboard.h>
 #include <snake/player.h>
@@ -32,7 +33,7 @@ class SnakeApp : public cinder::app::App {
  private:
   void DrawBackground() const;
   void DrawCountDown() const;
-  void DrawFood() const;
+  void DrawFood();
   void DrawGameOver();
   void DrawSnake() const;
   float PercentageOver() const;
@@ -43,6 +44,7 @@ class SnakeApp : public cinder::app::App {
   std::chrono::time_point<std::chrono::system_clock> last_intact_time_;
   std::chrono::time_point<std::chrono::system_clock> last_pause_time_;
   std::chrono::time_point<std::chrono::system_clock> last_time_;
+  std::chrono::time_point<std::chrono::system_clock> last_color_change_time_;
   snake::LeaderBoard leaderboard_;
   bool paused_;
   const std::string player_name_;
@@ -54,6 +56,11 @@ class SnakeApp : public cinder::app::App {
   size_t time_left_;
   std::vector<snake::Player> top_players_;
   std::vector<snake::Player> currents_top_scores_;
+  float red_val_;
+  float green_val_;
+  float blue_val_;
+  cinder::audio::VoiceRef mVoice;
+  cinder::audio::VoiceRef eat;
 };
 
 }  // namespace snakeapp

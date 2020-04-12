@@ -7,6 +7,7 @@
 #include <cinder/Vector.h>
 #include <cinder/gl/draw.h>
 #include <cinder/gl/gl.h>
+#include <cinder/audio/audio.h>
 #include <gflags/gflags.h>
 #include <snake/player.h>
 #include <snake/segment.h>
@@ -14,6 +15,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <random>
 #include <string>
 
 namespace snakeapp {
@@ -64,15 +66,27 @@ SnakeApp::SnakeApp()
       speed_{FLAGS_speed},
       state_{GameState::kPlaying},
       tile_size_{FLAGS_tilesize},
-      time_left_{0} {}
+      time_left_{0},
+      last_color_change_time_{system_clock::now()},
+      red_val_{0},
+      green_val_{1},
+      blue_val_{0} {}
 
 void SnakeApp::setup() {
   cinder::gl::enableDepthWrite();
   cinder::gl::enableDepthRead();
+
+  cinder::audio::SourceFileRef sourceFile = cinder::audio::load( cinder::app::loadAsset( "music.mp3" ) );
+  mVoice = cinder::audio::Voice::create( sourceFile );
+  sourceFile = cinder::audio::load( cinder::app::loadAsset( "hitmarker.mp3" ) );
+  eat = cinder::audio::Voice::create( sourceFile );
+
+  mVoice->start();
 }
 
 void SnakeApp::update() {
   if (state_ == GameState::kGameOver) {
+    mVoice->stop();
     if (top_players_.empty() || currents_top_scores_.empty()) {
       leaderboard_.AddScoreToLeaderBoard({player_name_, engine_.GetScore()});
       top_players_ = leaderboard_.RetrieveHighScores(kLimit);
@@ -90,6 +104,12 @@ void SnakeApp::update() {
 
   if (engine_.GetSnake().IsChopped()) {
     if (state_ != GameState::kCountDown) {
+      mVoice->stop();
+      cinder::audio::SourceFileRef sourceFile = cinder::audio::load( cinder::app::loadAsset( "countdown.mp3" ) );
+      mVoice = cinder::audio::Voice::create( sourceFile );
+
+      mVoice->start();
+
       state_ = GameState::kCountDown;
       last_intact_time_ = time;
     }
@@ -108,8 +128,13 @@ void SnakeApp::update() {
   }
 
   if (time - last_time_ > std::chrono::milliseconds(speed_)) {
+    size_t previous_size = engine_.GetSnake().Size();
     engine_.Step();
     last_time_ = time;
+
+    if (engine_.GetSnake().Size() > previous_size) {
+      eat->start();
+    }
   }
 }
 
@@ -194,7 +219,6 @@ void SnakeApp::DrawGameOver() {
     } else {
       PrintText(ss.str(), color, size, {center.x - offset, center.y + (++row) * 50});
     }
-    //PrintText(ss.str(), color, size, {center.x - offset, center.y + (++row) * 50});
   }
 
   row = 0;
@@ -208,7 +232,6 @@ void SnakeApp::DrawGameOver() {
     } else {
       PrintText(ss.str(), color, size, {center.x + offset, center.y + (++row) * 50});
     }
-    //PrintText(ss.str(), color, size, {center.x + offset, center.y + (++row) * 50});
   }
 
   printed_game_over_ = true;
@@ -234,8 +257,27 @@ void SnakeApp::DrawSnake() const {
   const cinder::vec2 center = getWindowCenter();
 }
 
-void SnakeApp::DrawFood() const {
-  cinder::gl::color(0, 1, 0);
+void SnakeApp::DrawFood() {
+  double T = 1000 * (1.0 / engine_.GetSnake().Size());
+
+  using std::chrono::milliseconds;
+  const double elapsed_time =
+      duration_cast<milliseconds>(system_clock::now() - last_color_change_time_)
+          .count();
+
+  if (elapsed_time >= T) {
+    std::random_device rd;
+    std::uniform_real_distribution<double> ud(0, 1);
+    std::mt19937 mt(rd());
+
+    red_val_ = ud(mt);
+    green_val_ = ud(mt);
+    blue_val_ = ud(mt);
+    last_color_change_time_ = system_clock::now();
+  }
+
+  cinder::gl::color(red_val_, green_val_, blue_val_);
+
   const Location loc = engine_.GetFood().GetLocation();
   cinder::gl::drawSolidRect(Rectf(tile_size_ * loc.Row(),
                                   tile_size_ * loc.Col(),
