@@ -76,10 +76,15 @@ void SnakeApp::setup() {
   cinder::gl::enableDepthWrite();
   cinder::gl::enableDepthRead();
 
-  cinder::audio::SourceFileRef sourceFile = cinder::audio::load( cinder::app::loadAsset( "music.mp3" ) );
-  mVoice = cinder::audio::Voice::create( sourceFile );
-  sourceFile = cinder::audio::load( cinder::app::loadAsset( "hitmarker.mp3" ) );
-  eat = cinder::audio::Voice::create( sourceFile );
+  try {
+    cinder::audio::SourceFileRef sourceFile =
+        cinder::audio::load(cinder::app::loadAsset("music.mp3"));
+    mVoice = cinder::audio::Voice::create(sourceFile);
+    sourceFile = cinder::audio::load(cinder::app::loadAsset("hitmarker.mp3"));
+    eat = cinder::audio::Voice::create(sourceFile);
+  } catch (const std::exception& ex) {
+    exit(1);
+  }
 
   mVoice->start();
 }
@@ -105,8 +110,12 @@ void SnakeApp::update() {
   if (engine_.GetSnake().IsChopped()) {
     if (state_ != GameState::kCountDown) {
       mVoice->stop();
-      cinder::audio::SourceFileRef sourceFile = cinder::audio::load( cinder::app::loadAsset( "countdown.mp3" ) );
-      mVoice = cinder::audio::Voice::create( sourceFile );
+      try {
+        cinder::audio::SourceFileRef sourceFile = cinder::audio::load( cinder::app::loadAsset( "countdown.mp3" ) );
+        mVoice = cinder::audio::Voice::create( sourceFile );
+      } catch (const std::exception& ex) {
+        exit(1);
+      }
 
       mVoice->start();
 
@@ -288,13 +297,13 @@ void SnakeApp::DrawFood() {
 
 void SnakeApp::DrawPortals() const {
   cinder::gl::color(1, 1, 1);
-  Location loc = Location(3, 3);
+  Location loc = engine_.GetPortalALocation();
   cinder::gl::drawSolidRect(Rectf(tile_size_ * loc.Row(),
                                   tile_size_ * loc.Col(),
                                   tile_size_ * loc.Row() + tile_size_,
                                   tile_size_ * loc.Col() + tile_size_));
 
-  loc = Location(12, 12);
+  loc = engine_.GetPortalBLocation();
   cinder::gl::drawSolidRect(Rectf(tile_size_ * loc.Row(),
                                   tile_size_ * loc.Col(),
                                   tile_size_ * loc.Row() + tile_size_,

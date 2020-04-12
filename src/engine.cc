@@ -53,7 +53,9 @@ Engine::Engine(size_t width, size_t height, unsigned seed)
       direction_{Direction::kRight},
       last_direction_{Direction::kUp},
       rng_{seed},
-      uniform_{0, 1} {
+      uniform_{0, 1},
+      portalA_loc {static_cast<int>(height / 4), static_cast<int>(width / 4)},
+      portalB_loc {static_cast<int>(3 * height / 4) - 1, static_cast<int>(3 * width / 4) - 1} {
 
   Reset();
 }
@@ -68,10 +70,10 @@ void Engine::Step() {
   Location new_head_loc =
       (snake_.Head().GetLocation() + d_loc) % Location(height_, width_);
 
-  if (snake_.Head().GetLocation() + d_loc == Location(3, 3)) {
-    new_head_loc = Location(12, 12);
-  } else if (snake_.Head().GetLocation() + d_loc == Location(12, 12)) {
-    new_head_loc = Location(3, 3);
+  if (snake_.Head().GetLocation() + d_loc == GetPortalALocation()) {
+    new_head_loc = GetPortalBLocation();
+  } else if (snake_.Head().GetLocation() + d_loc == GetPortalBLocation()) {
+    new_head_loc = GetPortalALocation();
   }
 
   const std::set<Location> old_occupied_tiles = GetOccupiedTiles();
@@ -101,6 +103,11 @@ void Engine::Step() {
     Segment new_tail = Segment(old_tail.GetLocation() - d_loc);
     snake_.AddPart(new_tail);
     food_ = Food(GetRandomLocation());
+
+    while (food_.GetLocation() == GetPortalALocation()
+          || food_.GetLocation() == GetPortalBLocation()) {
+      food_ = Food(GetRandomLocation());
+    }
   }
 }
 
@@ -142,6 +149,10 @@ Location Engine::GetRandomLocation() {
 }
 
 Food Engine::GetFood() const { return food_; }
+
+Location Engine::GetPortalALocation() const { return portalA_loc; }
+
+Location Engine::GetPortalBLocation() const { return portalB_loc; }
 
 void Engine::SetDirection(const snake::Direction direction) {
   direction_ = direction;

@@ -34,6 +34,8 @@ class Engine {
   size_t GetScore() const;
   Snake GetSnake() const;
   Food GetFood() const;
+  Location GetPortalALocation() const;
+  Location GetPortalBLocation() const;
 
  private:
   Location GetRandomLocation();
@@ -48,6 +50,8 @@ class Engine {
   Direction last_direction_;
   std::mt19937 rng_;
   std::uniform_real_distribution<double> uniform_;
+  Location portalA_loc;
+  Location portalB_loc;
 };
 
 }  // namespace snake

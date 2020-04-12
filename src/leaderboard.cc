@@ -15,16 +15,23 @@ using std::vector;
 // See examples: https://github.com/SqliteModernCpp/sqlite_modern_cpp/tree/dev
 
 LeaderBoard::LeaderBoard(const string& db_path) : db_{db_path} {
+  try {
   db_ << "CREATE TABLE if not exists leaderboard (\n"
          "  name  TEXT NOT NULL,\n"
          "  score INTEGER NOT NULL\n"
          ");";
+  } catch (const std::exception& ex) {
+    exit(1);
+  }
 }
 
 void LeaderBoard::AddScoreToLeaderBoard(const Player& player) {
-  db_ << "INSERT INTO leaderboard (name,score) values (?,?);"
-      << player.name
-      << player.score;
+  try {
+    db_ << "INSERT INTO leaderboard (name,score) values (?,?);" << player.name
+        << player.score;
+  } catch (const std::exception& ex) {
+    exit(1);
+  }
 }
 
 vector<Player> GetPlayers(sqlite::database_binder* rows) {
@@ -42,20 +49,26 @@ vector<Player> GetPlayers(sqlite::database_binder* rows) {
 }
 
 vector<Player> LeaderBoard::RetrieveHighScores(const size_t limit) {
-  // TODO(you): Add your query here.
-  auto rows = db_ << "SELECT name,score FROM leaderboard ORDER BY score DESC LIMIT ?;"
-                  << limit;
-  return GetPlayers(&rows);
+  try {
+    auto rows = db_ << "SELECT name,score FROM leaderboard ORDER BY score DESC LIMIT ?;"
+                    << limit;
+
+    return GetPlayers(&rows);
+  } catch (const std::exception& ex) {
+    exit(1);
+  }
 }
 
 vector<Player> LeaderBoard::RetrieveHighScores(const Player& player,
                                                const size_t limit) {
-  // TODO(you): Add your query here.
-  //******************************** ACTUALLY GET IT FROM THE RIGHT PLAYER
-  auto rows = db_ << "SELECT name,score FROM leaderboard WHERE name = ? ORDER BY score DESC LIMIT ?;"
-      << player.name
-      << limit;
-  return GetPlayers(&rows);
+  try {
+    auto rows = db_ << "SELECT name,score FROM leaderboard WHERE name = ? ORDER BY score DESC LIMIT ?;"
+        << player.name
+        << limit;
+    return GetPlayers(&rows);
+  } catch (const std::exception& ex) {
+    exit(1);
+  }
 }
 
 }  // namespace snake
